@@ -1,9 +1,15 @@
 const getAuthHeaders = (): Record<string, string> => {
-  const token = import.meta.env.VITE_GITHUB_TOKEN;
+  // Try both ways of accessing environment variables
+  const token = import.meta.env.VITE_GITHUB_TOKEN || 
+               (typeof process !== 'undefined' && process.env && process.env.VITE_GITHUB_TOKEN);
+  
+  console.log('Token exists:', !!token);
+  
   if (!token) {
     console.warn('GitHub token not found in environment variables');
-    return {}; // Return empty object that matches Record<string, string>
+    return {}; // Empty object still matches Record<string, string> type
   }
+  
   return {
     Authorization: `Bearer ${token}`
   };
