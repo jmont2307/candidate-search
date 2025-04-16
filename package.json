@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --host 0.0.0.0 --port 10000",
-    "start": "node server.js"
+    "start": "serve -s dist -l $PORT"
   },
   "dependencies": {
     "dotenv": "^16.4.1",
