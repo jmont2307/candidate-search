@@ -1,7 +1,6 @@
 const getAuthHeaders = (): Record<string, string> => {
-  // Try both ways of accessing environment variables
-  const token = import.meta.env.VITE_GITHUB_TOKEN || 
-               (typeof process !== 'undefined' && process.env && process.env.VITE_GITHUB_TOKEN);
+  // Just use Vite's environment variable system
+  const token = import.meta.env.VITE_GITHUB_TOKEN;
   
   console.log('Token exists:', !!token);
   
