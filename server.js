@@ -14,18 +14,8 @@ try {
 
 const app = express();
 
-// Ensure PORT is a number
-let PORT;
-try {
-  PORT = parseInt(process.env.PORT) || 3000;
-  if (isNaN(PORT)) {
-    console.error('Invalid PORT value:', process.env.PORT);
-    PORT = 3000;
-  }
-} catch (err) {
-  console.error('Error parsing PORT:', err);
-  PORT = 3000;
-}
+// Render sets a PORT environment variable - we MUST use this exact variable name
+const PORT = process.env.PORT || 10000;
 
 console.log(`Starting server on port ${PORT}`);
 console.log(`GitHub Token is ${process.env.VITE_GITHUB_TOKEN ? 'configured' : 'NOT configured'}`);
@@ -51,6 +41,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
+// Listen on the PORT environment variable that Render provides
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}`);
 });
