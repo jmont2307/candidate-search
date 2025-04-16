@@ -54,19 +54,20 @@ npm run dev
 
 Visit `http://localhost:5173` to view the application.
 
-## Deployment to Render
+## Screenshots and Deployment
 
-1. Create a new Web Service on [Render](https://render.com/)
-2. Connect your GitHub repository
-3. Set the build command: `npm run build`
-4. Set the start command: `npm run preview`
-5. Add the environment variable:
-   - Key: `VITE_GITHUB_TOKEN`
-   - Value: Your GitHub personal access token
-6. Deploy the application
+You can access the live application at [Candidate Search](https://candidate-search-mb9v.onrender.com).
 
-## Demo Video
-[Watch the demo video here](putvidhere)
+### Screenshots
+
+#### Home Page
+![Home Page](screenshots/search.png)
+
+#### Candidate List
+![Candidate List](screenshots/candidates.png)
+
+#### Render Deployment
+![Deployment](screenshots/render.png)
 
 ## Technologies Used
 
