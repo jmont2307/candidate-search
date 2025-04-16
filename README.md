@@ -77,7 +77,3 @@ Visit `http://localhost:5173` to view the application.
 - Local Storage
 - React Router
 
-## Screenshot
-
-![Application Screenshot](screenshot.png)
-
