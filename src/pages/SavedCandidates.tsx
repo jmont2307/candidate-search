@@ -6,17 +6,73 @@ const SavedCandidates = () => {
 
   // Load saved candidates from localStorage on component mount
   useEffect(() => {
-    const storedCandidates = localStorage.getItem('savedCandidates');
-    if (storedCandidates) {
-      setSavedCandidates(JSON.parse(storedCandidates));
+    try {
+      const storedCandidates = localStorage.getItem('savedCandidates');
+      console.log('Loading saved candidates from localStorage');
+      
+      if (storedCandidates) {
+        const parsedCandidates = JSON.parse(storedCandidates);
+        
+        // Validate the data
+        if (Array.isArray(parsedCandidates)) {
+          console.log('Found', parsedCandidates.length, 'saved candidates');
+          
+          // Additional validation to ensure each entry is a valid candidate
+          const validCandidates = parsedCandidates.filter(
+            candidate => candidate && typeof candidate === 'object' && candidate.id && candidate.login
+          );
+          
+          if (validCandidates.length !== parsedCandidates.length) {
+            console.warn('Some saved candidates were invalid and removed');
+          }
+          
+          setSavedCandidates(validCandidates);
+          
+          // Update localStorage if we filtered out some items
+          if (validCandidates.length !== parsedCandidates.length) {
+            localStorage.setItem('savedCandidates', JSON.stringify(validCandidates));
+            console.log('Updated localStorage with valid candidates only');
+          }
+        } else {
+          console.error('Saved candidates is not an array, resetting to empty array');
+          setSavedCandidates([]);
+          localStorage.setItem('savedCandidates', JSON.stringify([]));
+        }
+      } else {
+        console.log('No saved candidates found in localStorage');
+      }
+    } catch (err) {
+      console.error('Error loading saved candidates:', err);
+      setSavedCandidates([]);
+      // Reset localStorage if it's corrupted
+      try {
+        localStorage.setItem('savedCandidates', JSON.stringify([]));
+      } catch (e) {
+        console.error('Failed to reset localStorage:', e);
+      }
     }
   }, []);
 
   // Function to remove a candidate from saved list
   const removeCandidate = (id: number) => {
-    const updatedCandidates = savedCandidates.filter(candidate => candidate.id !== id);
-    setSavedCandidates(updatedCandidates);
-    localStorage.setItem('savedCandidates', JSON.stringify(updatedCandidates));
+    try {
+      console.log('Removing candidate with ID:', id);
+      const updatedCandidates = savedCandidates.filter(candidate => candidate.id !== id);
+      setSavedCandidates(updatedCandidates);
+      localStorage.setItem('savedCandidates', JSON.stringify(updatedCandidates));
+      console.log('Removed candidate, remaining:', updatedCandidates.length);
+    } catch (err) {
+      console.error('Error removing candidate:', err);
+      // Try to recover by reloading from localStorage
+      try {
+        const storedCandidates = localStorage.getItem('savedCandidates');
+        if (storedCandidates) {
+          setSavedCandidates(JSON.parse(storedCandidates));
+        }
+      } catch (e) {
+        console.error('Failed to recover saved candidates:', e);
+      }
+    }
   };
 
   return (

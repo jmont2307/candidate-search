@@ -9,35 +9,73 @@ const CandidateSearch = () => {
   const [noMoreCandidates, setNoMoreCandidates] = useState<boolean>(false);
 
   // Function to load a candidate
-  const loadCandidate = async () => {
+  const loadCandidate = async (retryCount = 0) => {
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('Loading candidate, attempt:', retryCount + 1);
       
       // Get random users
       const users = await searchGithub();
       
       if (!users || users.length === 0) {
+        console.log('No users found, setting noMoreCandidates to true');
         setNoMoreCandidates(true);
         setLoading(false);
         return;
       }
       
-      // Get detailed info for the first user
-      const userDetails = await searchGithubUser(users[0].login);
+      console.log('Found', users.length, 'users, using the first one');
       
-      if (!userDetails || !userDetails.login) {
-        // Try next user if this one fails
-        loadCandidate();
+      // Try more than just the first user if we have multiple
+      const userIndex = Math.min(retryCount, users.length - 1);
+      const user = users[userIndex];
+      
+      if (!user || !user.login) {
+        console.error('Invalid user data:', user);
+        if (retryCount < 3) {
+          // Try again with a new batch of users
+          console.log('Retrying with a new batch of users');
+          loadCandidate(retryCount + 1);
+        } else {
+          setError('Failed to fetch valid user data after multiple attempts');
+          setLoading(false);
+        }
         return;
       }
       
+      // Get detailed info for the user
+      const userDetails = await searchGithubUser(user.login);
+      
+      if (!userDetails || !userDetails.login) {
+        console.error('Invalid user details:', userDetails);
+        // Try next user if available, otherwise retry
+        if (userIndex < users.length - 1) {
+          console.log('Trying next user in list');
+          loadCandidate(retryCount + 1);
+        } else if (retryCount < 3) {
+          console.log('Retrying with a new batch of users');
+          loadCandidate(retryCount + 1);
+        } else {
+          setError('Failed to fetch valid user details after multiple attempts');
+          setLoading(false);
+        }
+        return;
+      }
+      
+      console.log('Successfully loaded user details:', userDetails.login);
       setCurrentCandidate(userDetails);
-    } catch (err) {
-      setError('Failed to fetch candidate data');
-      console.error(err);
-    } finally {
       setLoading(false);
+    } catch (err) {
+      console.error('Error loading candidate:', err);
+      if (retryCount < 3) {
+        console.log('Retrying after error, attempt:', retryCount + 2);
+        setTimeout(() => loadCandidate(retryCount + 1), 1000); // Add delay between retries
+      } else {
+        setError('Failed to fetch candidate data after multiple attempts');
+        setLoading(false);
+      }
     }
   };
 
@@ -48,18 +86,51 @@ const CandidateSearch = () => {
 
   // Function to accept a candidate
   const acceptCandidate = () => {
-    if (!currentCandidate) return;
+    if (!currentCandidate) {
+      console.error('Cannot accept: No current candidate');
+      return;
+    }
     
-    // Get existing saved candidates from localStorage
-    const savedCandidates = JSON.parse(localStorage.getItem('savedCandidates') || '[]');
+    try {
+      // Get existing saved candidates from localStorage
+      let savedCandidates = [];
+      try {
+        const savedData = localStorage.getItem('savedCandidates');
+        savedCandidates = savedData ? JSON.parse(savedData) : [];
+        
+        // Ensure it's an array
+        if (!Array.isArray(savedCandidates)) {
+          console.error('Saved candidates is not an array, resetting');
+          savedCandidates = [];
+        }
+      } catch (err) {
+        console.error('Error parsing saved candidates:', err);
+        savedCandidates = [];
+      }
+      
+      console.log('Current saved candidates:', savedCandidates.length);
+      
+      // Check if candidate is already saved (avoid duplicates)
+      const isDuplicate = savedCandidates.some(
+        candidate => candidate.id === currentCandidate.id
+      );
+      
+      if (!isDuplicate) {
+        // Add current candidate to saved list
+        savedCandidates.push(currentCandidate);
+        console.log('Added candidate to saved list:', currentCandidate.login);
+        
+        // Save updated list to localStorage
+        localStorage.setItem('savedCandidates', JSON.stringify(savedCandidates));
+        console.log('Saved updated list with', savedCandidates.length, 'candidates');
+      } else {
+        console.log('Candidate already saved, skipping:', currentCandidate.login);
+      }
+    } catch (err) {
+      console.error('Error saving candidate:', err);
+    }
     
-    // Add current candidate to saved list
-    savedCandidates.push(currentCandidate);
-    
-    // Save updated list to localStorage
-    localStorage.setItem('savedCandidates', JSON.stringify(savedCandidates));
-    
-    // Load next candidate
+    // Load next candidate regardless of success/failure
     loadCandidate();
   };
 

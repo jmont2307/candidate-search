@@ -1,42 +1,67 @@
+const getAuthHeaders = () => {
+  const token = import.meta.env.VITE_GITHUB_TOKEN;
+  if (!token) {
+    console.warn('GitHub token not found in environment variables');
+    return {};
+  }
+  return {
+    Authorization: `Bearer ${token}`
+  };
+};
+
 const searchGithub = async () => {
   try {
-    const start = Math.floor(Math.random() * 100000000) + 1;
-    // console.log(import.meta.env);
+    // Use a smaller range to increase chances of finding active users
+    const start = Math.floor(Math.random() * 1000000) + 1;
+    console.log('Searching GitHub users since:', start);
+    
+    const headers = getAuthHeaders();
+    
     const response = await fetch(
-      `https://api.github.com/users?since=${start}`,
+      `https://api.github.com/users?since=${start}&per_page=30`,
       {
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_GITHUB_TOKEN}`,
-        },
+        headers: headers
       }
     );
-    // console.log('Response:', response);
-    const data = await response.json();
+    
     if (!response.ok) {
-      throw new Error('invalid API response, check the network tab');
+      console.error('GitHub API error:', response.status, response.statusText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error details:', errorData);
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
     }
-    // console.log('Data:', data);
+    
+    const data = await response.json();
+    console.log('Found', data.length, 'users');
     return data;
   } catch (err) {
-    // console.log('an error occurred', err);
+    console.error('Error searching GitHub:', err);
     return [];
   }
 };
 
 const searchGithubUser = async (username: string) => {
   try {
+    console.log('Fetching details for user:', username);
+    
+    const headers = getAuthHeaders();
+    
     const response = await fetch(`https://api.github.com/users/${username}`, {
-      headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_GITHUB_TOKEN}`,
-      },
+      headers: headers
     });
-    const data = await response.json();
+    
     if (!response.ok) {
-      throw new Error('invalid API response, check the network tab');
+      console.error('GitHub API error:', response.status, response.statusText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error details:', errorData);
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    console.log('User details retrieved successfully');
     return data;
   } catch (err) {
-    // console.log('an error occurred', err);
+    console.error('Error fetching user details:', err);
     return {};
   }
 };
