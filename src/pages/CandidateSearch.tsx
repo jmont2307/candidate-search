@@ -153,7 +153,7 @@ const CandidateSearch = () => {
     return <div className="container">
       <h1>Error</h1>
       <div>{error}</div>
-      <button onClick={loadCandidate}>Try Again</button>
+      <button onClick={() => loadCandidate(0)}>Try Again</button>
     </div>;
   }
 
