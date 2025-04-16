@@ -77,3 +77,10 @@ Visit `http://localhost:5173` to view the application.
 - Local Storage
 - React Router
 
+## Credits
+
+This project was created with assistance from:
+- Online Learning Assistant
+- Claude AI
+
+
